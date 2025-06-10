@@ -12,9 +12,16 @@ def stripechk():
     card = urllib.parse.unquote(card)
     url = f"https://api.voidapi.xyz/v2/stripe_auth?key={VOIDAPI_KEY}&card={card}"
     headers = {"User-Agent": "Mozilla/5.0"}
-    r = requests.get(url, headers=headers)
-    # Always return status 200, even if VoidAPI returns 400
-    return Response(r.text, status=200, content_type="application/json")
+    try:
+        r = requests.get(url, headers=headers, timeout=15)
+        return Response(r.text, status=200, content_type="application/json")
+    except Exception as e:
+        # Always return JSON, even on error
+        return Response(
+            '{"success": false, "error": "Relay server error: %s"}' % str(e),
+            status=200,
+            content_type="application/json"
+        )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
